@@ -40,7 +40,7 @@ function puzzle2() {
     let binary = hex.split('').map(h => hexMap[h]).join('')
     let packets = []
     parsePackets(binary, packets)
-    console.log(JSON.stringify(packets, null, 2))
+    // console.log(JSON.stringify(packets, null, 2))
     calculateValues(packets[0])
     return packets[0].value
 }
