@@ -48,18 +48,9 @@ function flipRegion(regionsOn, instruction) {
     }
 
     if (instruction.flip) {
-        let newRegionsOn = addToCube(instructionRegion, regionsOn[0])
-        newRegionsOn.push({...regionsOn[0]})
+        let newRegionsOn = [{...instructionRegion}]
 
-        if (debug && countFast([regionsOn[0]]) > countFast(newRegionsOn)) {
-            throw 'added region, but lost points'
-        }
-
-        if (debug && countFast([regionsOn[0]]) + countFast([instructionRegion]) < countFast(newRegionsOn)) {
-            throw 'added region, and gained too many points'
-        }
-
-        for (let region of regionsOn.slice(1)) {
+        for (let region of regionsOn) {
             let removeDoubleCountedRegion = deleteFromCube(instructionRegion, region)
             if (debug && countFast([region]) < countFast(removeDoubleCountedRegion)) {
                 throw 'removed double counted region, but gained points'
@@ -100,101 +91,6 @@ function countFast(newRegions) {
 
 function getRegion(x, y, z) {
     return {x, y, z}
-}
-
-function addToCube(newRegion, oldRegion) {
-    let mergedRegions = []
-    if (newRegion.x[0] < oldRegion.x[0]) {
-        if (newRegion.x[1] >= oldRegion.x[0]) {
-            let beforeX = [newRegion.x[0], oldRegion.x[0] -1]
-            let beforeRegions = addToCube(getRegion(beforeX, newRegion.y, newRegion.z), oldRegion)
-            mergedRegions = mergedRegions.concat([...beforeRegions])
-            let afterX = [oldRegion.x[0], newRegion.x[1]]
-            let afterRegions = addToCube(getRegion(afterX, newRegion.y, newRegion.z), oldRegion)
-            mergedRegions = mergedRegions.concat([...afterRegions])
-            return [...mergedRegions]
-        } else {
-            mergedRegions.push({...newRegion})
-            return [...mergedRegions]
-        }
-    }
-
-    if (newRegion.x[1] > oldRegion.x[1]) {
-        if (newRegion.x[0] <= oldRegion.x[1]) {
-            let afterX = [oldRegion.x[1] + 1, newRegion.x[1]]
-            let afterRegions = addToCube(getRegion(afterX, newRegion.y, newRegion.z), oldRegion)
-            mergedRegions = mergedRegions.concat([...afterRegions])
-            let beforeX = [newRegion.x[0], oldRegion.x[1]]
-            let beforeRegions = addToCube(getRegion(beforeX, newRegion.y, newRegion.z), oldRegion)
-            mergedRegions = mergedRegions.concat([...beforeRegions])
-            return [...mergedRegions]
-        } else {
-            mergedRegions.push({...newRegion})
-            return [...mergedRegions]
-        }
-    }
-
-    if (newRegion.y[0] < oldRegion.y[0]) {
-        if (newRegion.y[1] >= oldRegion.y[0]) {
-            let beforeY = [newRegion.y[0], oldRegion.y[0] -1]
-            let beforeRegions = addToCube(getRegion(newRegion.x, beforeY, newRegion.z), oldRegion)
-            mergedRegions = mergedRegions.concat([...beforeRegions])
-            let afterY = [oldRegion.y[0], newRegion.y[1]]
-            let afterRegions = addToCube(getRegion(newRegion.x, afterY, newRegion.z), oldRegion)
-            mergedRegions = mergedRegions.concat([...afterRegions])
-            return [...mergedRegions]
-        } else {
-            mergedRegions.push({...newRegion})
-            return [...mergedRegions]
-        }
-    }
-
-    if (newRegion.y[1] > oldRegion.y[1]) {
-        if (newRegion.y[0] <= oldRegion.y[1]) {
-            let afterY = [oldRegion.y[1] + 1, newRegion.y[1]]
-            let afterRegions = addToCube(getRegion(newRegion.x, afterY, newRegion.z), oldRegion)
-            mergedRegions = mergedRegions.concat([...afterRegions])
-            let beforeY = [newRegion.y[0], oldRegion.y[1]]
-            let beforeRegions = addToCube(getRegion(newRegion.x, beforeY, newRegion.z), oldRegion)
-            mergedRegions = mergedRegions.concat([...beforeRegions])
-            return [...mergedRegions]
-        } else {
-            mergedRegions.push({...newRegion})
-            return [...mergedRegions]
-        }
-    }
-
-    if (newRegion.z[0] < oldRegion.z[0]) {
-        if (newRegion.z[1] >= oldRegion.z[0]) {
-            let beforeZ = [newRegion.z[0], oldRegion.z[0] -1]
-            let beforeRegions = addToCube(getRegion(newRegion.x, newRegion.y, beforeZ), oldRegion)
-            mergedRegions = mergedRegions.concat([...beforeRegions])
-            let afterZ = [oldRegion.z[0], newRegion.z[1]]
-            let afterRegions = addToCube(getRegion(newRegion.x, newRegion.y, afterZ), oldRegion)
-            mergedRegions = mergedRegions.concat([...afterRegions])
-            return [...mergedRegions]
-        } else {
-            mergedRegions.push({...newRegion})
-            return [...mergedRegions]
-        }
-    }
-
-    if (newRegion.z[1] > oldRegion.z[1]) {
-        if (newRegion.z[0] <= oldRegion.z[1]) {
-            let afterZ = [oldRegion.z[1] + 1, newRegion.z[1]]
-            let afterRegions = addToCube(getRegion(newRegion.x, newRegion.y, afterZ), oldRegion)
-            mergedRegions = mergedRegions.concat([...afterRegions])
-            let beforeZ = [newRegion.z[0], oldRegion.z[1]]
-            let beforeRegions = addToCube(getRegion(newRegion.x, newRegion.y, beforeZ), oldRegion)
-            mergedRegions = mergedRegions.concat([...beforeRegions])
-            return [...mergedRegions]
-        } else {
-            mergedRegions.push({...newRegion})
-            return [...mergedRegions]
-        }
-    }
-
-    return []
 }
 
 function deleteFromCube(deleteCube, baseCube) {
