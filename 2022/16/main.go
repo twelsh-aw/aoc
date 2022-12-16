@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type tunnel struct {
@@ -42,14 +43,18 @@ func part1() {
 }
 
 func part2() {
+	start := time.Now()
 	maxPressure := getMaxPressure(26, true)
 	fmt.Printf("%v\n", maxPressure)
+	fmt.Printf("%v\n", time.Since(start))
 }
 
 func getMaxPressure(startTime int, includeElephant bool) int {
 	valvesOpened := make(map[string]bool)
 	for _, tun := range tunnels {
-		valvesOpened[tun.name] = tun.flow == 0
+		if tun.flow == 0 {
+			valvesOpened[tun.name] = true
+		}
 	}
 
 	maxPressure := 0
@@ -112,6 +117,15 @@ func getNextPaths(p path, includeElephant bool) []path {
 	}
 
 	var paths []path
+	if len(p.valvesOpened) == len(tunnels) {
+		// everything already open; don't generate new paths
+		next := p
+		next.timeLeft--
+		return []path{
+			next,
+		}
+	}
+
 	curTunnel := tunnels[p.curTunnel]
 	curElephantTunnel := tunnels[p.curElephantTunnel]
 	canHumanOpen := !p.valvesOpened[curTunnel.name]
@@ -138,7 +152,9 @@ func getNextPaths(p path, includeElephant bool) []path {
 			valvesOpened:  clone(p.valvesOpened),
 		}
 		next.valvesOpened[curTunnel.name] = true
-		paths = append(paths, next)
+		if !includeElephant {
+			paths = append(paths, next)
+		}
 
 		for _, tun := range curElephantTunnel.leadsTo {
 			if tun == p.prevTunnel || tun == p.prevElephantTunnel {
@@ -159,8 +175,6 @@ func getNextPaths(p path, includeElephant bool) []path {
 			valvesOpened:      clone(p.valvesOpened),
 		}
 		next.valvesOpened[curElephantTunnel.name] = true
-		paths = append(paths, next)
-
 		for _, tun := range curTunnel.leadsTo {
 			if tun == p.prevTunnel || tun == p.prevElephantTunnel {
 				continue
@@ -184,7 +198,9 @@ func getNextPaths(p path, includeElephant bool) []path {
 			timeLeft:      p.timeLeft - 1,
 			valvesOpened:  clone(p.valvesOpened),
 		}
-		paths = append(paths, next)
+		if !includeElephant {
+			paths = append(paths, next)
+		}
 
 		for _, etun := range curElephantTunnel.leadsTo {
 			if etun == p.prevTunnel || etun == p.prevElephantTunnel {
