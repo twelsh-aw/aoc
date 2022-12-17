@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"strings"
 )
@@ -29,6 +28,12 @@ type chamber struct {
 }
 
 type coordinateMove func(pos position) position
+
+type cycle struct {
+	firstOccurrence int
+	lastOccurrence  int
+	length          int
+}
 
 const (
 	chamberWidth      = 7
@@ -86,31 +91,33 @@ var (
 )
 
 func part1() {
-	simulate(2022)
+	height := simulate(2022)
+	fmt.Println(height)
 }
 
 func part2() {
-	simulate(1000000)
+	cyc := detectCycle()
+	heightUntilCycle := simulate(cyc.firstOccurrence)
+	heightAfterCycle := simulate(cyc.lastOccurrence)
+	heightAddedByCycle := heightAfterCycle - heightUntilCycle
+	numCycles := (1000000000000 - cyc.firstOccurrence) / cyc.length
+	remainderCycles := (1000000000000 - cyc.firstOccurrence) % cyc.length
+	heightAfterRemainder := simulate(cyc.firstOccurrence + remainderCycles)
+	heightAddedByRemainder := heightAfterRemainder - heightUntilCycle
+	totalHeight := heightUntilCycle + heightAddedByRemainder + (heightAddedByCycle * numCycles)
+	fmt.Println(totalHeight)
 }
 
-func simulate(numRocks int) {
+func simulate(numRocks int) int {
 	ch := chamber{
 		coords:    make(map[position]string),
 		maxHeignt: -1,
 	}
 
 	moveNum := 0
-	maxLogSoFar := 3
 	for rockNum := 0; rockNum < numRocks; rockNum++ {
-		if int(math.Log10(float64(rockNum+1))) > maxLogSoFar {
-			fmt.Println(rockNum+1, ch.maxHeignt+1)
-			maxLogSoFar = int(math.Log10(float64(rockNum + 1)))
-			// what is the pattern?
-		}
-
 		rck := rocks[rockNum%len(rocks)]
 		ch.InitRock(rck)
-		//ch.Print()
 
 		rockSettled := false
 		moveByJets := true
@@ -121,10 +128,7 @@ func simulate(numRocks int) {
 				moveNum++
 			}
 
-			//fmt.Println("CurRock", ch.curRockPositions)
 			didMove := ch.MoveRock(direction)
-			//fmt.Println("NewRock", ch.curRockPositions)
-			//ch.Print()
 			if !moveByJets && !didMove {
 				ch.SettleCurrentRock()
 				rockSettled = true
@@ -134,9 +138,55 @@ func simulate(numRocks int) {
 		}
 	}
 
-	//fmt.Println("FINAL")
-	//ch.Print()
-	fmt.Printf("%v\n", ch.maxHeignt+1)
+	return ch.maxHeignt + 1
+}
+
+func detectCycle() cycle {
+	ch := chamber{
+		coords:    make(map[position]string),
+		maxHeignt: -1,
+	}
+
+	moveNum := 0
+	cycles := make(map[string]cycle)
+	for rockNum := 0; true; rockNum++ {
+		if key, filled := ch.areTopRowsFilled(); filled {
+			rockIndex := rockNum % len(rocks)
+			moveIndex := moveNum % len(movements)
+			key += fmt.Sprintf("_%s_%s", rockIndex, moveIndex)
+			if v, ok := cycles[key]; ok {
+				v.lastOccurrence = rockNum
+				v.length = v.lastOccurrence - v.firstOccurrence
+				return v
+			} else {
+				cycles[key] = cycle{
+					firstOccurrence: rockNum,
+				}
+			}
+		}
+
+		rck := rocks[rockNum%len(rocks)]
+		ch.InitRock(rck)
+		rockSettled := false
+		moveByJets := true
+		for !rockSettled {
+			direction := "v"
+			if moveByJets {
+				direction = movements[moveNum%len(movements)]
+				moveNum++
+			}
+
+			didMove := ch.MoveRock(direction)
+			if !moveByJets && !didMove {
+				ch.SettleCurrentRock()
+				rockSettled = true
+			}
+
+			moveByJets = !moveByJets
+		}
+	}
+
+	panic("did not find cycle")
 }
 
 func (c *chamber) InitRock(rck rock) {
@@ -225,6 +275,26 @@ func (c *chamber) Print() {
 		fmt.Println(strings.Join(rowCoords, " "))
 	}
 	fmt.Println("= = = = = = =")
+}
+
+func (c *chamber) areTopRowsFilled() (string, bool) {
+	key := ""
+	for i := 0; i < chamberWidth; i++ {
+		isColFilled := false
+		for j := 0; j < 4; j++ {
+			val := c.coords[position{i, c.maxHeignt - j}]
+			key += val
+			if c.coords[position{i, c.maxHeignt - j}] == "#" {
+				isColFilled = true
+			}
+		}
+
+		if !isColFilled {
+			return "", false
+		}
+	}
+
+	return key, true
 }
 
 func readInput() {
