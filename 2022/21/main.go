@@ -129,7 +129,7 @@ func calculate(valueA, valueB *value, operand operand) value {
 		if valueA.unknown {
 			c = valueA.coefficient
 		} else if valueB.unknown {
-			c = valueB.coefficient
+			c = -1 * valueB.coefficient
 		}
 	case mult:
 		r = valueA.int * valueB.int
@@ -151,10 +151,10 @@ func calculate(valueA, valueB *value, operand operand) value {
 		}
 
 		if valueA.unknown {
-			r = valueA.int - valueB.int
+			r = valueB.int - valueA.int
 			c = valueA.coefficient
 		} else if valueB.unknown {
-			r = valueB.int - valueA.int
+			r = valueA.int - valueB.int
 			c = valueB.coefficient
 		}
 	default:
