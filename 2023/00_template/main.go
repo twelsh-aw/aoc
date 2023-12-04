@@ -27,6 +27,9 @@ func readInput() {
 	}
 
 	for _, line := range strings.Split(string(b), "\n") {
+		if len(line) == 0 {
+			continue
+		}
 		fmt.Println(line)
 	}
 }
