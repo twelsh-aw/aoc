@@ -36,11 +36,23 @@ func part1() {
 	// we can partition the verticies into those that are 3-connected to source and those that are 4+-connected to source
 	// these are the same groups that would remain after a 3-cut separating source from some sink on the other side
 	// once we know the groups, we can multiply them. I don't actually find the 3-cut
+
+	// let G1, G2 be the sizes of connected subgraphs after the min cut is made such that G1*G2 is unique.
+	// Pick source vertex s such that s belongs to G1 and G1<=G2.
+	// let v != s be another vertex and let n be the number of (s,v)-edge-disjoint paths.
+	// then n=3 vs n>=4 partititions V into sets of size G1,G2.
+	// proof:
+	// suppose n >= 4 and v in G2. Then after the min cut, G1 and G2 are still connected, a contradiction.
+	// suppose n = 3 and v in G1. Then we can find a 3-edge (Mengers) cut in G1 separating s and v.
+	// this gives new sizes of sets (G1-x), (G2+x).
+	// Thus (G1-x)(G2+x)=G1G2 by uniqueness.
+	// => (G1-G2)x-x^2=0 => x(x-(G1-G2))=0
+	// => x = 0 OR x=G1-G2 => x <= 0, which contradicts that v is in G1.
 	for v := range g.V {
 		if v == start {
 			continue
 		}
-		n := g.findNumEdgeUniquePaths(start, v)
+		n := g.findNumEdgeDisjointPaths(start, v)
 		if n == 3 {
 			sink = append(sink, v)
 		} else if n == 4 {
@@ -58,9 +70,9 @@ func part2() {
 	fmt.Printf("%v\n", nil)
 }
 
-func (g *graph) findNumEdgeUniquePaths(source, dest string) int {
-	// by Mengers, the number of edge unique paths is equal to number of verticies separating source from dest
-	// just iteratively apply Djikstra and remove the shortest path each time
+func (g *graph) findNumEdgeDisjointPaths(source, dest string) int {
+	// by Mengers, the number of edge disjoint paths is equal to number of edges separating source from dest
+	// just iteratively apply Djikstra and remove the shortest path each time to get number of edge disjoint paths.
 	type pos struct {
 		prev    map[string]string
 		dists   map[string]int
